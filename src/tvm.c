@@ -33,12 +33,18 @@ int main(int argc, char *argv[]) {
 				case INVALID_INTEGER:
 					printf("INVALID_INTEGER");
 					break;
+				case INVALID_ESCAPE:
+					printf("INVALID_ESCAPE");
+					break;
 			}
 			printf(" in %s:%d:%d: '%c'(%d)\n", fname, ret.line, ret.column, ret.symbol, ret.symbol);
+			return ret.type;
 		}
 		fclose(file);
-		printf("\nprogram output:\n\n");
-		prun(p);
-		return ret.type;
+		printf("\nprogram output:\n");
+		progstate state = progstatenew();
+		int r = prun(&state, p);
+		pfree(p);
+		return r;
 	}
 }

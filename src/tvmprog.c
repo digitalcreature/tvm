@@ -19,15 +19,19 @@ void paddi(program *p, instr i, uint *cap) {
 	p->instrs[p->length++] = i;
 }
 
-char nextc(FILE *file, char *c, uint *column) {
+char nextc(FILE *file, char *c, uint *line, uint *column) {
 	*c = fgetc(file);
+	if (*c == '\n') {
+		(*line) ++;
+		*column = 0;
+	}
 	(*column) ++;
 	return *c;
 }
 
-int fgeti(FILE *file, char *c, int *i, uint *column) {
+int fgeti(FILE *file, char *c, int *i, uint *line, uint *column) {
 	int sign = 1;
-		#define nextc() nextc(file, c, column)
+		#define nextc() nextc(file, c, line, column)
 	if (*c == '-') {
 		sign = -1;
 		nextc();
@@ -58,72 +62,75 @@ ploadret pload(program *_p, FILE *file) {
 	uint line = 1;
 	uint column = 0;
 	char c;
-		#define nextc() nextc(file, &c, &column)
-		#define skipspaces() if (isspace(c)) while (isspace(nextc())) if (c == '\n') line = (column = 0 , line + 1)
+		#define nextc() nextc(file, &c, &line, &column)
+		#define nextnospace() while (isspace(nextc()))
 		#define ploadret(type) ((ploadret) {type, line, column, c})
 		#define paddi(i) paddi(&p, i, &cap)
-		#define fgeti(i) if (fgeti(file, &c, i, &column) < 0) return (pfree(p), ploadret(INVALID_INTEGER))
+		#define rerror(type) return (pfree(p), ploadret(type))
+		#define fgeti(i) if (fgeti(file, &c, i, &line, &column) < 0) rerror(INVALID_INTEGER)
 	instr i;
 	nextc();
 	while (c != EOF) {
-		skipspaces();
-		i.name = (instrname) c;
+		if (isspace(c))
+			nextnospace();
+		i.name = c;
 		switch (i.name) {
 			//these take an argument
 			case PUSHC:
-				skipspaces();
-				i.arg = nextc();
+				nextnospace();
+				if (c == '\\') {
+					switch(nextc()) {
+						case 'n': c = '\n'; break;
+						case 'r': c = '\r'; break;
+						case 't': c = '\t'; break;
+						case ' ': c = ' '; break;
+						default:
+							rerror(INVALID_ESCAPE);
+					}
+				}
+				i.arg = c;
 				nextc();
 				break;
 			case PUSHI:
-				nextc();
-				skipspaces();
+				nextnospace();
 				fgeti(&i.arg);
 				break;
 			//these take no argument
 			case POP:
 			case PCHAR:
-				nextc();
-				skipspaces();
+				nextnospace();
 				i.arg = 0;
 				break;
 			default:
-				pfree(p);
-				return ploadret(INVALID_INSTRUCTION);
+				rerror(INVALID_INSTRUCTION);
 		}
-		printf("%c '%c' (%d)\n", i.name, i.arg, i.arg);
+		printf("%d:%d %c '%c' (%d)\n", line, column, i.name, i.arg, i.arg);
 		paddi(i);
 	}
 	*_p = p;
 	return ploadret(SUCCESS);
 		#undef nextc
-		#undef skipspaces
+		#undef nextnospace
 		#undef paddi
 		#undef fgeti
 }
 
 
-int prun(program p) {
-		#define STACK_SIZE 2048
-	int stack[STACK_SIZE];
-	int stackp = 0;
-		#define push(i) if (stackp < STACK_SIZE) stack[stackp ++] = i; else return (fprintf(stderr, "STACK OVERFLOW\n"), -1)
-		#define pop(i) if (stackp >= 0) i = stack[stackp --]; else return (fprintf(stderr, "STACK UNDERFLOW\n"), -1)
-		#define peek(i) (i = stack[stackp - 1])
+int prun(progstate *state, program p) {
 	instr *pp = p.instrs;
-	int i;
+	int c;
 	while (pp - p.instrs < p.length) {
 		switch (pp->name) {
 			case PUSHI:
-				push(0);
-				break;
 			case PUSHC:
+				ppush(state, pp->arg);
 				break;
 			case POP:
-				pop(i);
+				ppop(state, NULL);
 				break;
 			case PCHAR:
-				peek(i);
+				ppeek(state, &c);
+				putchar(c);
 				break;
 		}
 		pp ++;
