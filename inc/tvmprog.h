@@ -8,8 +8,14 @@ typedef struct _instr {
 	enum {
 		PUSHI = '#',			//push integer to stack
 		PUSHC = '@',			//push character to stack
-		POP = '~',			//pop and discard integer from stack
+		POP = '~',				//pop and discard integer from stack
 		PCHAR = '>',			//print character at top of stack
+		PINT = '}',				//print integer at top of stack
+		IADD =  '+',
+		ISUB =  '-',
+		IMUL =  '*',
+		IDIV =  '/',
+		IMOD =  '%',
 	} name;
 	int arg;
 } instr;

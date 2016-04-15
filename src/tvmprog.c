@@ -101,6 +101,12 @@ ploadret pload(program *_p, FILE *file) {
 			//these take no argument
 			case POP:
 			case PCHAR:
+			case PINT:
+			case IADD:
+			case ISUB:
+			case IMUL:
+			case IDIV:
+			case IMOD:
 				nextnospace();
 				i.arg = 0;
 				break;
@@ -114,32 +120,70 @@ ploadret pload(program *_p, FILE *file) {
 	return ploadret(SUCCESS);
 		#undef nextc
 		#undef nextnospace
+		#undef ploadret
 		#undef paddi
+		#undef rerror
 		#undef fgeti
 }
 
 
 int prun(progstate *state, program p) {
 		#define check(call, msg) if ((call) != 0) return (printf("\n** Error: %s **\n", msg), -1)
+		#define ppush(i) check(ppush(state, i), "STACK OVERFLOW")
+		#define ppop(i) check(ppop(state, i), "STACK UNDERFLOW")
+		#define ppeek(i) check(ppeek(state, i), "STACK EMPTY")
 	instr *pp = p.instrs;
-	int c;
+	int a, b, c;
 	while (pp - p.instrs < p.length) {
 		switch (pp->name) {
 			case PUSHI:
 			case PUSHC:
-				check(ppush(state, pp->arg), "STACK OVERFLOW");
+				ppush(pp->arg);
 				break;
 			case POP:
-				check(ppop(state, NULL), "STACK UNDERFLOW");
+				ppop(NULL);
 				break;
 			case PCHAR:
-				check(ppeek(state, &c), "STACK EMPTY");
+				ppeek(&c);
 				putchar(c);
+				break;
+			case PINT:
+				ppeek(&c);
+				printf("%d", c);
+				break;
+			case IADD:
+				ppop(&b);
+				ppop(&a);
+				ppush(a + b);
+				break;
+			case ISUB:
+				ppop(&b);
+				ppop(&a);
+				ppush(a - b);
+				break;
+			case IMUL:
+				ppop(&b);
+				ppop(&a);
+				ppush(a * b);
+				break;
+			case IDIV:
+				ppop(&b);
+				ppop(&a);
+				ppush(a / b);
+				break;
+			case IMOD:
+				ppop(&b);
+				ppop(&a);
+				ppush(a % b);
 				break;
 		}
 		pp ++;
 	}
 	return 0;
+		#undef check
+		#undef ppush
+		#undef ppop
+		#undef ppeek
 }
 
 void pfree(program p) {

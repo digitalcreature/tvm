@@ -1,4 +1,5 @@
-`example tvm bytecode
-
-@\n	@!		@d		@l		@r		@o		@W		@\s	@,		@o		@l		@e		@H		`push characters in reverse order
->~		>~		>>~	>~		>~		>~		>~		>~		>~		>~		>~		>~		>~		`pop and print each character
+#30#20+}~	@\n>	`addition
+#30#20-}~	@\n>	`subtraction
+#30#20*}~	@\n>	`multiplication
+#30#20/}~	@\n>	`division
+#30#20%}~	@\n>	`modulus

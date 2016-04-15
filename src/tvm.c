@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 		printf("\nprogram output:\n");
 		progstate state = progstatenew();
 		int r = prun(&state, p);
+		putchar('\n');
 		pfree(p);
 		return r;
 	}
