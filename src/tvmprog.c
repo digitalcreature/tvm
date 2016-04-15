@@ -21,6 +21,9 @@ void paddi(program *p, instr i, uint *cap) {
 
 char nextc(FILE *file, char *c, uint *line, uint *column) {
 	*c = fgetc(file);
+	if (*c == '`') {
+		while ((*c = fgetc(file)) != '\n');
+	}
 	if (*c == '\n') {
 		(*line) ++;
 		*column = 0;
@@ -83,7 +86,7 @@ ploadret pload(program *_p, FILE *file) {
 						case 'n': c = '\n'; break;
 						case 'r': c = '\r'; break;
 						case 't': c = '\t'; break;
-						case ' ': c = ' '; break;
+						case 's': c = ' '; break;
 						default:
 							rerror(INVALID_ESCAPE);
 					}
@@ -104,7 +107,7 @@ ploadret pload(program *_p, FILE *file) {
 			default:
 				rerror(INVALID_INSTRUCTION);
 		}
-		printf("%d:%d %c '%c' (%d)\n", line, column, i.name, i.arg, i.arg);
+		// printf("%d:%d %c '%c' (%d)\n", line, column, i.name, i.arg, i.arg);
 		paddi(i);
 	}
 	*_p = p;
@@ -117,19 +120,20 @@ ploadret pload(program *_p, FILE *file) {
 
 
 int prun(progstate *state, program p) {
+		#define check(call, msg) if ((call) != 0) return (printf("\n** Error: %s **\n", msg), -1)
 	instr *pp = p.instrs;
 	int c;
 	while (pp - p.instrs < p.length) {
 		switch (pp->name) {
 			case PUSHI:
 			case PUSHC:
-				ppush(state, pp->arg);
+				check(ppush(state, pp->arg), "STACK OVERFLOW");
 				break;
 			case POP:
-				ppop(state, NULL);
+				check(ppop(state, NULL), "STACK UNDERFLOW");
 				break;
 			case PCHAR:
-				ppeek(state, &c);
+				check(ppeek(state, &c), "STACK EMPTY");
 				putchar(c);
 				break;
 		}

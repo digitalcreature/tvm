@@ -1,25 +1,4 @@
-@
-H>@e>@l>>@o>@,>@\a
->
-@
-W
->
-~
-~
-~
->
-@
-r
->
-~
-~
->
-@
-d
->
-@
-!
->
-@
-\n
->
+`example tvm bytecode
+
+@\n	@!		@d		@l		@r		@o		@W		@\s	@,		@o		@l		@e		@H		`push characters in reverse order
+>~		>~		>>~	>~		>~		>~		>~		>~		>~		>~		>~		>~		>~		`pop and print each character
